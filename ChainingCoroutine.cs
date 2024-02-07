@@ -18,22 +18,6 @@ namespace StellaFox
         public void Stop();
     }
 
-    public class RoutineInfo
-    {
-        private float startTime = Time.unscaledTime;
-
-        public float elapsedTime
-        {
-            get => Time.unscaledTime - startTime;
-        }
-
-        public int Count 
-        {
-            get; 
-            set; 
-        }
-    }
-
     public class ChainingRoutine : IChainingCoroutine
     {
         public ChainingRoutine()
@@ -69,7 +53,8 @@ namespace StellaFox
         //1 : 한번 실행으로 등록
         //2 : 싱글 반복문 등록할때
         //3 : 이중 반복문 등록할때
-        private int _repeatLevel = 1;
+        //4 ~ : 그 이상
+        private int _repeatLevel = 0;
         private RoutineExecutor _processor;
         #endregion
 
@@ -82,16 +67,27 @@ namespace StellaFox
 
         public IChainingCoroutine Wait(YieldInstruction wait, Func<RoutineInfo, bool> triggerCondition = null)
         {
-            if (triggerCondition.Invoke(_routineInfo))
+            //triggerCondition에 조건이 안들어왔거나, 조건이 참일 경우에만 바인딩.
+            if (triggerCondition == null || triggerCondition.Invoke(_routineInfo))
             {
-                _processor.Bind(new DelayRoutine(wait), _repeatLevel);
+                _processor.Bind(new DelayRoutine(wait, OnNextRoutine), _repeatLevel);
+            }
+            else //조건이 들어왔는데, 조건이 거짓인 경우 OnNextRoutine만 호출
+            {
+                _processor.Bind(new CallbackMessageRoutine(OnNextRoutine), _repeatLevel);
             }
 
             return this;
         }
 
+        //조건이 달성될때까지 대기
         public IChainingCoroutine Wait(Func<RoutineInfo, bool> triggerCondition = null)
         {
+            if (triggerCondition == null)
+            {
+                return this;
+            }
+
             if (triggerCondition.Invoke(_routineInfo))
             {
                 var customYI = new ChainYieldInstructure(triggerCondition, _routineInfo);
@@ -103,15 +99,14 @@ namespace StellaFox
 
         public IChainingCoroutine Wait(Coroutine[] coroutines)
         {
-            _processor.Bind(new WaitRoutines(coroutines), _repeatLevel);
+            _processor.Bind(new WaitRoutines(coroutines, OnNextRoutine), _repeatLevel);
             return this;
         }
 
         public IChainingCoroutine BeginLoop(Func<RoutineInfo, bool> loopCondition)
         {
-            _repeatLevel++;
-
             _processor.Bind(new RoutineProcessor(loopCondition, _routineInfo), _repeatLevel);
+            _repeatLevel++; //넣고 루프를 하나 증가. _repeatLevel부터 올리면 index를 증가하고 list에 넣는것과 같음. 이게 맞음
             return this;
         }
 

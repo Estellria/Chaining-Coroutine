@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.Timeline;
 using UnityEngine;
 
 namespace StellaFox
@@ -13,6 +12,31 @@ namespace StellaFox
         //public IEnumerator Stop();
     }
 
+
+    public class RoutineInfo
+    {
+        private float startTime = Time.unscaledTime;
+
+        public float elapsedTime
+        {
+            get => Time.unscaledTime - startTime;
+        }
+
+        public int Count
+        {
+            get;
+            set;
+        }
+    }
+
+    public enum eRoutineMode
+    {
+        //조건이 참일때만 OnNextRoutine 호출.
+        //조건이 거짓이여도 OnNextRoutine 호출.
+    }
+
+
+    [Serializable]
     public class RoutineProcessor : IRoutine
     {
         public RoutineProcessor(Func<RoutineInfo, bool> condition, RoutineInfo info)
@@ -25,34 +49,37 @@ namespace StellaFox
         private RoutineInfo _routineInfo;
         private Func<RoutineInfo, bool> _exitCondition;
 
-        //stack은 데이터를 유지하려면 여러가지 귀찮
-        private List<IRoutine> _routineList = new List<IRoutine>(); 
+        protected List<IRoutine> _routineList = new List<IRoutine>(); 
 
 
         public virtual IEnumerator Execute()
         {
             while (_exitCondition.Invoke(_routineInfo))
             {
-                foreach (IRoutine routiner in _routineList)
+                foreach (IRoutine routine in _routineList)
                 {
-                    yield return CoroutineHelper.StartCoroutine(routiner.Execute());
+                    yield return CoroutineHelper.StartCoroutine(routine.Execute());
                 }
             }
         }
 
-        public void Bind(IRoutine routine, int repeatLevel)
+        public void Bind(IRoutine newRoutine, int repeatLevel)
         {
             var tempList = _routineList; 
-            tempList.Add(routine);
+
+            for (int i = 0; i < repeatLevel; ++i)
+            {
+                var rp = tempList?.LastOrDefault(e => e is RoutineProcessor);
+                tempList = (rp as RoutineProcessor)?._routineList;
+            }
+
+            tempList.Add(newRoutine);
         }
     }
 
     public class RoutineExecutor : RoutineProcessor
     {
         public RoutineExecutor() : base (null, null) { }
-
-        private List<IRoutine> _routineList = new List<IRoutine>();
-
 
         //런타임 실행
         public override IEnumerator Execute()
@@ -89,10 +116,12 @@ namespace StellaFox
     public class WaitRoutines : IRoutine
     {
         private Coroutine[] _coroutines;
+        private Action _callback;
 
-        public WaitRoutines(Coroutine[] coroutines)
+        public WaitRoutines(Coroutine[] coroutines, Action callback)
         {
             _coroutines = coroutines;
+            _callback = callback;
         }
 
         public IEnumerator Execute()
@@ -100,6 +129,7 @@ namespace StellaFox
             foreach (var routine in _coroutines)
             {
                 yield return routine;
+                _callback.Invoke();
             }
         }
     }
@@ -108,15 +138,18 @@ namespace StellaFox
     public class DelayRoutine : IRoutine
     {
         private YieldInstruction _yieldInstruction;
+        private Action _callback;
 
-        public DelayRoutine(YieldInstruction yieldInstruction)
+        public DelayRoutine(YieldInstruction yieldInstruction, Action callback)
         {
             _yieldInstruction = yieldInstruction;
+            _callback = callback;
         }
 
         public IEnumerator Execute()
         {
             yield return _yieldInstruction;
+            _callback.Invoke();
         }
     }
 
@@ -133,6 +166,23 @@ namespace StellaFox
         public IEnumerator Execute()
         {
             yield return _yieldInstruction;
+        }
+    }
+
+
+    public class CallbackMessageRoutine : IRoutine
+    {
+        private Action _callback;
+
+        public CallbackMessageRoutine(Action callback)
+        {
+            _callback = callback;
+        }
+
+        public IEnumerator Execute()
+        {
+            _callback.Invoke();
+            yield break;
         }
     }
 }
