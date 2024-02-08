@@ -3,91 +3,96 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CoroutineTester : MonoBehaviour
+public class Sample : MonoBehaviour
 {
     public void Start()
     {
-        Test2();
+        Sample6();
+    }
+    
+
+    private void Sample1()
+    {
+        var coroutine = new ChainingCoroutine();
+        coroutine.Bind(x => print("1"))
+                 .Wait(new WaitForSeconds(1))
+                 .Bind(x => print("2"))
+                 .Wait(new WaitForSeconds(1))
+                 .Bind(x => print("3"))
+                 .Wait(new WaitForSeconds(1))
+                 .Bind(x => print("4"))
+                 .Wait(new WaitForSeconds(1))
+                 .Bind(x => print("5"));
+
+
+        coroutine.Bind(x => print($"호출 종료.\n 걸린 시간 : {x.elapsedTime}"))
+                 .Play();
     }
 
-    private void Test1()
+    private void Sample2()
     {
-        int x = 0;
-        ChainingRoutine chaining = new ChainingRoutine();
-        chaining.OnNextRoutine += () =>
-        {
-            print($"on next {++x}");
-        };
+        int i = 0;
 
-        chaining.Bind(x => print("일"))
-                .Wait(new WaitForSeconds(3)) //조건이 만족되지 않으면 OnNextRoutine도 실행되지 않음.
-                .Bind(x => print("삼"))
-                .Wait(new WaitForSeconds(3), c => x > 10000 )
-                .Bind(x => print("오"));
-
-        chaining.Play();
+        new ChainingCoroutine()
+            .BeginLoop(l => i < 5)
+            .Bind(x => print($"loop : {i + 1}"))
+            .Wait(new WaitForSeconds(0.5f))
+            .EndLoop(l => i++)
+            .Play();
     }
 
-    private void Test2()
+    private void Sample3()
     {
-        int x = 0;
-        ChainingRoutine chaining = new ChainingRoutine();
+        int i = 0;
+        int j = 0;
 
-        chaining.Bind(x => print("1"))
-                .BeginLoop(l => x++ < 3)
-                    .Bind(x => print("2"))
-                    .Bind(x => print("3"))
-                    .Wait(new WaitForSeconds(1f))
-                .EndLoop()
-                .Bind(x => print($"{x.Count}"));
+        var coroutine = new ChainingCoroutine();
+        coroutine.Bind(x => print("시작"))
+                 .BeginLoop(l => i < 5) //<- 이 부분 잘 안됨
+                    .BeginLoop(l => j < 5)
+                    .Bind(x => print($"{i}"))
+                    .EndLoop(l => j++)
+                 .EndLoop(l => { i++; j = 0; }) //이런식으로 내부 반복문 조건을 초기화 해줘야됨
+                 .Bind(x => print($"전체 호출 수 {x.CallingCount}"));
 
-        chaining.Play();
+        coroutine.Play();
     }
 
-    private void Test3()
+    private void Sample4()
     {
-        int x = 0, y = 0;
-        ChainingRoutine chaining = new ChainingRoutine();
+        var coroutineX = new ChainingCoroutine();
+        var co = coroutineX.Bind(x => print("x start"))
+                  .Wait(new WaitForSeconds(10))
+                  .Bind(x => print("x coroutine end"))
+                  .Play();
 
-        chaining.Bind(x => print("1"))
-                .BeginLoop(l => x++ < 2)
-                    .Bind(x => print("2"))
-                    .BeginLoop(l => y++ < 2)
-                        .Bind(x => print("3"))
-                        .Wait(new WaitForSeconds(1f))
-                    .EndLoop()
-                .EndLoop()
-                .Bind(x => print("end"));
+        var coroutineY = new ChainingCoroutine();
+        coroutineY.Bind(x => print("y start"))
+                  .WaitFor(co)
+                  .Bind(x => print("finish waiting"))
+                  .Bind(x => print("y coroutine end"));
 
-        chaining.Play();
+        coroutineY.Play();
     }
 
-    private void Test4()
+    private void Sample5()
     {
-        int x = 0;
-        int y = 0;
+        var coroutine = new ChainingCoroutine();
+        coroutine.Bind(x => print("start"))
+                 .WaitFor(c => Input.GetKeyDown(KeyCode.Space))
+                 .Bind(x => print("finish coroutine"))
+                 .Play();
+    }
 
-        ChainingRoutine chaining = new ChainingRoutine();
-        chaining.Bind(x => print("1"))
-                .Bind(x => print("Hello world 2"))
-                    .BeginLoop(c => x++ < 3) //loop 1
-                    .Bind(x => print("s loop 3"))
-                        .BeginLoop(c => y++ < 3) //loop 2
-                        .Bind(x => print("d loop 6"))
-                        .Wait(new WaitForSeconds(0.01f))
-                        .EndLoop() //end loop 2
-                    .Bind(x => print("s loop 7"))
-                    .Wait(new WaitForSeconds(3))
-                    .EndLoop()
-                .Bind(x => print($"{x.Count} end")); //end loop 1
+    private void Sample6()
+    {
+        bool isCondition = true;
 
-        //x.Count 실행 순서에 문제 있음
-
-        chaining.OnNextRoutine += () =>
-        {
-            print($"on next {x}, {y}");
-        };
-
-        chaining.Play();
+        var coroutine = new ChainingCoroutine();
+        coroutine.Bind(x => print("start"))
+                 .WaitIf(new WaitForSeconds(2f), c => isCondition)
+                 .Bind(x => print("finish coroutine"))
+                 .Bind(x => print($"seconds : {x.elapsedTime}"))
+                 .Play();
     }
 }

@@ -5,14 +5,14 @@ using System.Runtime.CompilerServices;
 
 namespace StellaFox
 {
-    public class CoroutineHelper : MonoBehaviour
+    public class CoroutineManager : MonoBehaviour
     {
         private static MonoBehaviour monoInstance = null;
 
         [RuntimeInitializeOnLoadMethod]
         private static void Initialize()
         {
-            monoInstance = new GameObject("Coroutine Manager").AddComponent<CoroutineHelper>();
+            monoInstance = new GameObject("Coroutine Manager").AddComponent<CoroutineManager>();
             DontDestroyOnLoad(monoInstance.gameObject);
         }
 
