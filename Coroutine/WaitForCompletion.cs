@@ -6,9 +6,9 @@ using UnityEngine;
 
 namespace StellaFox
 {
-    public class WaitForComplete : CustomYieldInstruction
+    public class WaitForCompletion : CustomYieldInstruction
     {
-        public WaitForComplete(Func<RoutineInfo, bool> waitingCondition, RoutineInfo routineInfo)
+        public WaitForCompletion(Func<RoutineInfo, bool> waitingCondition, RoutineInfo routineInfo)
         {
             _waitingCondition = waitingCondition;
             _routineInfo = routineInfo;

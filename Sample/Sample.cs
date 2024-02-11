@@ -1,98 +1,126 @@
 using StellaFox;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Sample : MonoBehaviour
 {
-    public void Start()
+    [Range(1, 7)]
+    public int sampleNumber;
+
+
+    [ContextMenu("Play sample")]
+    public void PlaySample()
     {
-        Sample6();
+        sampleNumber = Mathf.Clamp(sampleNumber, 1, 7);
+        Invoke($"Sample{sampleNumber}", 0);
     }
-    
 
     private void Sample1()
     {
-        var coroutine = new ChainingCoroutine();
-        coroutine.Bind(x => print("1"))
-                 .Wait(new WaitForSeconds(1))
-                 .Bind(x => print("2"))
-                 .Wait(new WaitForSeconds(1))
-                 .Bind(x => print("3"))
-                 .Wait(new WaitForSeconds(1))
-                 .Bind(x => print("4"))
-                 .Wait(new WaitForSeconds(1))
-                 .Bind(x => print("5"));
+        var cc = new ChainingCoroutine();
 
+        cc.Bind(x => print($"1 : {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"))
+          .Bind(x => print($"2 : {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"))
+          .Bind(x => print($"3 : {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"))
+          .Bind(x => print($"4 : {x.elapsedTime}초, 실행 횟수  {x.CallingCount}"))
+          .Bind(x => print($"5 : {x.elapsedTime}초, 실행 횟수  {x.CallingCount}"));
 
-        coroutine.Bind(x => print($"호출 종료.\n 걸린 시간 : {x.elapsedTime}"))
-                 .Play();
+        cc.OnNextRoutine += () => print("다음");
+
+        var coroutine = cc.Play();
     }
+
 
     private void Sample2()
     {
-        int i = 0;
-
         new ChainingCoroutine()
-            .BeginLoop(l => i < 5)
-            .Bind(x => print($"loop : {i + 1}"))
-            .Wait(new WaitForSeconds(0.5f))
-            .EndLoop(l => i++)
+            .Bind(x => print($"1 : {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"))
+            .Wait(new WaitForSeconds(1f))
+            .Bind(x => print($"2 : {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"))
+            .Wait(new WaitForSeconds(1f))
+            .Bind(x => print($"3 : {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"))
+            .Wait(new WaitForSeconds(1f))
+            .Bind(x => print($"4 : {x.elapsedTime}초, 실행 횟수  {x.CallingCount}"))
+            .Wait(new WaitForSeconds(1f))
+            .Bind(x => print($"5 : {x.elapsedTime}초, 실행 횟수  {x.CallingCount}"))
             .Play();
     }
 
+
     private void Sample3()
     {
-        int i = 0;
-        int j = 0;
-
-        var coroutine = new ChainingCoroutine();
-        coroutine.Bind(x => print("시작"))
-                 .BeginLoop(l => i < 5) //<- 이 부분 잘 안됨
-                    .BeginLoop(l => j < 5)
-                    .Bind(x => print($"{i}"))
-                    .EndLoop(l => j++)
-                 .EndLoop(l => { i++; j = 0; }) //이런식으로 내부 반복문 조건을 초기화 해줘야됨
-                 .Bind(x => print($"전체 호출 수 {x.CallingCount}"));
-
-        coroutine.Play();
+        int index = 0;
+        new ChainingCoroutine()
+            .BeginLoop(x => index < 5)
+                .Bind(x => print($"{++index}번째 호출"))
+                .Wait(new WaitForSeconds(0.5f))
+            .EndLoop()
+            .Bind(x => print(x.elapsedTime))
+            .Play();
     }
+
 
     private void Sample4()
     {
-        var coroutineX = new ChainingCoroutine();
-        var co = coroutineX.Bind(x => print("x start"))
-                  .Wait(new WaitForSeconds(10))
-                  .Bind(x => print("x coroutine end"))
-                  .Play();
-
-        var coroutineY = new ChainingCoroutine();
-        coroutineY.Bind(x => print("y start"))
-                  .WaitFor(co)
-                  .Bind(x => print("finish waiting"))
-                  .Bind(x => print("y coroutine end"));
-
-        coroutineY.Play();
+        int index = 0;
+        new ChainingCoroutine()
+            .BeginLoop(x => index < 5)
+                .Bind(x => print($"{++index}번째 호출"))
+                .WaitFor(c => Input.GetMouseButtonDown(0))
+            .EndLoop()
+            .Bind(x => print(x.elapsedTime))
+            .Play();
     }
+
 
     private void Sample5()
     {
-        var coroutine = new ChainingCoroutine();
-        coroutine.Bind(x => print("start"))
-                 .WaitFor(c => Input.GetKeyDown(KeyCode.Space))
-                 .Bind(x => print("finish coroutine"))
-                 .Play();
+        int index1 = 0;
+        int index2 = 0;
+        int count = 0;
+        string color1 = "<color=red>##</color>";
+        string color2 = "<color=green>@</color>";
+
+        new ChainingCoroutine()
+            .BeginLoop(x => index1 < 3) //무한반복문됨 오류 고쳐야됨
+                .Bind(x => print($"{color1} {index1 + 1}번째 외부 루프 반복"))
+                .Bind(x => index1++)
+                .BeginLoop(x => index2 < 3)
+                    .Bind(x => print($"{color2} {++count}번째 내부 루프 반복"))
+                    .Bind(x => index2++)
+                .EndLoop()
+                .Bind(x => index2 = 0)
+                .EndLoop()
+            .Bind(x => print(x.elapsedTime))
+            .Play();
     }
+
 
     private void Sample6()
     {
-        bool isCondition = true;
+        var cc1 = new ChainingCoroutine();
+        var cc2 = new ChainingCoroutine();
 
-        var coroutine = new ChainingCoroutine();
-        coroutine.Bind(x => print("start"))
-                 .WaitIf(new WaitForSeconds(2f), c => isCondition)
-                 .Bind(x => print("finish coroutine"))
-                 .Bind(x => print($"seconds : {x.elapsedTime}"))
-                 .Play();
+        var cc1Co = cc1.Bind(x => print("start cc1"))
+                       .Wait(new WaitForSeconds(3f))
+                       .Bind(x => print("finish cc1"))
+                       .Play();
+
+        cc2.Bind(x => print("start cc2"))
+            .WaitFor(cc1Co) //cc1가 끝날때까지 기다림
+            .Bind(x => print("finish cc2"))
+            .Play();
+    }
+
+
+    private void Sample7()
+    {
+        bool condition = true;
+
+        var cc = new ChainingCoroutine()
+                    .Bind(x => print($"start. {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"))
+                    .WaitIf(new WaitForSeconds(3f), x => condition)
+                    .Bind(x => print($"end. {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"));
+
+        cc.Play();
     }
 }
