@@ -113,7 +113,7 @@ namespace StellaFox
 
 
 
-        public IChainingCoroutine BeginLoop(Func<RoutineInfo, bool> loopCondition)
+        public IChainingCoroutine BeginLoop(Func<Condition, bool> loopCondition)
         {
             if (loopCondition != null)
             {

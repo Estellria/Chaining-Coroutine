@@ -7,6 +7,12 @@ public class Sample : MonoBehaviour
     public int sampleNumber;
 
 
+    private void Start()
+    {
+
+    }
+
+
     [ContextMenu("Play sample")]
     public void PlaySample()
     {
@@ -50,8 +56,8 @@ public class Sample : MonoBehaviour
     {
         int index = 0;
         new ChainingCoroutine()
-            .BeginLoop(x => index < 5)
-                .Bind(x => print($"{++index}번째 호출"))
+            .BeginLoop(x => x.To(0, 5, 1, ref index))
+                .Bind(x => print($"{index}번째 호출"))
                 .Wait(new WaitForSeconds(0.5f))
             .EndLoop()
             .Bind(x => print(x.elapsedTime))
@@ -61,11 +67,11 @@ public class Sample : MonoBehaviour
 
     private void Sample4()
     {
-        int index = 0;
         new ChainingCoroutine()
-            .BeginLoop(x => index < 5)
-                .Bind(x => print($"{++index}번째 호출"))
+            .Bind(x => print("마우스로 화면을 클릭하세요."))
+            .BeginLoop(x => x.To(0, 5, 1))
                 .WaitFor(c => Input.GetMouseButtonDown(0))
+                .Bind(x => print($"마우스 클릭"))
             .EndLoop()
             .Bind(x => print(x.elapsedTime))
             .Play();
@@ -74,22 +80,23 @@ public class Sample : MonoBehaviour
 
     private void Sample5()
     {
-        int index1 = 0;
-        int index2 = 0;
-        int count = 0;
+        int count0 = 0;
+        int count1 = 0;
+        int count2 = 0;
         string color1 = "<color=red>##</color>";
-        string color2 = "<color=green>@</color>";
+        string color2 = "<color=green>@@</color>";
+        string color3 = "<color=yellow>&&</color>";
 
         new ChainingCoroutine()
-            .BeginLoop(x => index1 < 3) //무한반복문됨 오류 고쳐야됨
-                .Bind(x => print($"{color1} {index1 + 1}번째 외부 루프 반복"))
-                .Bind(x => index1++)
-                .BeginLoop(x => index2 < 3)
-                    .Bind(x => print($"{color2} {++count}번째 내부 루프 반복"))
-                    .Bind(x => index2++)
+            .BeginLoop(x => x.To(0, 2, 1)) 
+                .Bind(x => print($"{color1} {++count0}번째 외부 루프 반복"))
+                .BeginLoop(x => x.To(0, 2, 1, true)) 
+                    .Bind(x => print($"{color2} {++count1}번째 중간 루프 반복"))
+                    .BeginLoop(x => x.To(0, 2, 1, true))
+                        .Bind(x => print($"{color3} {++count2}번째 내부 루프 반복"))
                 .EndLoop()
-                .Bind(x => index2 = 0)
                 .EndLoop()
+            .EndLoop()
             .Bind(x => print(x.elapsedTime))
             .Play();
     }
@@ -118,7 +125,7 @@ public class Sample : MonoBehaviour
 
         var cc = new ChainingCoroutine()
                     .Bind(x => print($"start. {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"))
-                    .WaitIf(new WaitForSeconds(3f), x => condition)
+                    .WaitIf(new WaitForSeconds(3f), x => condition) //conditiond이 true 일때만 대기한다
                     .Bind(x => print($"end. {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"));
 
         cc.Play();

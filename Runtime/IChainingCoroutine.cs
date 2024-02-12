@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using StellaFox;
 using UnityEngine;
 
@@ -14,7 +15,7 @@ public interface IChainingCoroutine
     public IChainingCoroutine WaitFor(Func<RoutineInfo, bool> triggerCondition);
     public IChainingCoroutine WaitFor(params Coroutine[] coroutines);
 
-    public IChainingCoroutine BeginLoop(Func<RoutineInfo, bool> exitCondition);
+    public IChainingCoroutine BeginLoop(Func<Condition, bool> exitCondition);
     public IChainingCoroutine EndLoop(Action<RoutineInfo> endAction = null);
 
     public Coroutine Play();

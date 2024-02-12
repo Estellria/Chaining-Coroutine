@@ -9,9 +9,11 @@ namespace StellaFox
 {
     public class RoutineProcessor : IRoutine
     {
-        public RoutineProcessor(Func<RoutineInfo, bool> condition, RoutineInfo info)
+        public RoutineProcessor(Func<Condition, bool> condition, RoutineInfo info)
         {
             _routineList = new List<IRoutine>();
+            _condition = new Condition();
+
             _exitCondition = condition;
             _routineInfo = info;
         }
@@ -23,13 +25,14 @@ namespace StellaFox
 
         protected List<IRoutine> _routineList;
 
+        private Condition _condition;
         private RoutineInfo _routineInfo;
-        private Func<RoutineInfo, bool> _exitCondition;
+        private Func<Condition, bool> _exitCondition;
 
 
         public virtual IEnumerator Execute()
         {
-            while (_exitCondition.Invoke(_routineInfo))
+            while (_exitCondition.Invoke(_condition))
             {
                 for (int i = 0; i < _routineList.Count; ++i)
                 {
@@ -51,7 +54,7 @@ namespace StellaFox
         {
             var tempList = _routineList;
 
-            for (int i = 0; i < repeatLevel; ++i)
+            for (int i = 0; i < repeatLevel; ++i) //repeatLevel의 수는 반복문 계층을 의미하고 한 계층당 하나의 반복문이 존재하기에 반복문에서 tempList가 null이 될 수 없다.
             {
                 var rp = tempList?.LastOrDefault(e => e is RoutineProcessor);
                 tempList = (rp as RoutineProcessor)?._routineList;
