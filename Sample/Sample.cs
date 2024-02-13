@@ -3,20 +3,14 @@ using UnityEngine;
 
 public class Sample : MonoBehaviour
 {
-    [Range(1, 7)]
+    [Range(1, 8)]
     public int sampleNumber;
-
-
-    private void Start()
-    {
-
-    }
 
 
     [ContextMenu("Play sample")]
     public void PlaySample()
     {
-        sampleNumber = Mathf.Clamp(sampleNumber, 1, 7);
+        sampleNumber = Mathf.Clamp(sampleNumber, 1, 8);
         Invoke($"Sample{sampleNumber}", 0);
     }
 
@@ -24,11 +18,11 @@ public class Sample : MonoBehaviour
     {
         var cc = new ChainingCoroutine();
 
-        cc.Bind(x => print($"1 : {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"))
-          .Bind(x => print($"2 : {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"))
-          .Bind(x => print($"3 : {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"))
-          .Bind(x => print($"4 : {x.elapsedTime}초, 실행 횟수  {x.CallingCount}"))
-          .Bind(x => print($"5 : {x.elapsedTime}초, 실행 횟수  {x.CallingCount}"));
+        cc.Bind(x => print($"1 : {x.elapsedTime}초, 실행 횟수 {x.CalledCount}"))
+          .Bind(x => print($"2 : {x.elapsedTime}초, 실행 횟수 {x.CalledCount}"))
+          .Bind(x => print($"3 : {x.elapsedTime}초, 실행 횟수 {x.CalledCount}"))
+          .Bind(x => print($"4 : {x.elapsedTime}초, 실행 횟수  {x.CalledCount}"))
+          .Bind(x => print($"5 : {x.elapsedTime}초, 실행 횟수  {x.CalledCount}"));
 
         cc.OnNextRoutine += () => print("다음");
 
@@ -39,15 +33,15 @@ public class Sample : MonoBehaviour
     private void Sample2()
     {
         new ChainingCoroutine()
-            .Bind(x => print($"1 : {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"))
+            .Bind(x => print($"1 : {x.elapsedTime}초, 실행 횟수 {x.CalledCount}"))
             .Wait(new WaitForSeconds(1f))
-            .Bind(x => print($"2 : {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"))
+            .Bind(x => print($"2 : {x.elapsedTime}초, 실행 횟수 {x.CalledCount}"))
             .Wait(new WaitForSeconds(1f))
-            .Bind(x => print($"3 : {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"))
+            .Bind(x => print($"3 : {x.elapsedTime}초, 실행 횟수 {x.CalledCount}"))
             .Wait(new WaitForSeconds(1f))
-            .Bind(x => print($"4 : {x.elapsedTime}초, 실행 횟수  {x.CallingCount}"))
+            .Bind(x => print($"4 : {x.elapsedTime}초, 실행 횟수  {x.CalledCount}"))
             .Wait(new WaitForSeconds(1f))
-            .Bind(x => print($"5 : {x.elapsedTime}초, 실행 횟수  {x.CallingCount}"))
+            .Bind(x => print($"5 : {x.elapsedTime}초, 실행 횟수  {x.CalledCount}"))
             .Play();
     }
 
@@ -124,10 +118,23 @@ public class Sample : MonoBehaviour
         bool condition = true;
 
         var cc = new ChainingCoroutine()
-                    .Bind(x => print($"start. {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"))
+                    .Bind(x => print($"start. {x.elapsedTime}초, 실행 횟수 {x.CalledCount}"))
                     .WaitIf(new WaitForSeconds(3f), x => condition) //conditiond이 true 일때만 대기한다
-                    .Bind(x => print($"end. {x.elapsedTime}초, 실행 횟수 {x.CallingCount}"));
+                    .Bind(x => print($"end. {x.elapsedTime}초, 실행 횟수 {x.CalledCount}"));
 
         cc.Play();
+    }
+
+
+
+    private void Sample8()
+    {
+        int i = 0;
+        var cc = new ChainingCoroutine()
+            .BeginLoop(x => x.To(0, 100000000))
+                .Bind(x => i++)
+            .EndLoop()
+            .Bind(x => print($"{x.elapsedTime} \t i : {i}"))
+            .Play();
     }
 }

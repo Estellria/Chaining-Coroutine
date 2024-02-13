@@ -19,7 +19,7 @@ namespace StellaFox
             get { return _stopwatch.ElapsedMilliseconds / 1000f; }
         }
 
-        public int CallingCount
+        public int CalledCount
         {
             get { return _routineCallingCount; }
         }

@@ -10,7 +10,7 @@ namespace StellaFox
         private int _count;
 
 
-        public bool To(int value, int target, int increase, bool repeat = false)
+        public bool To(int value, int target, int increase = 1, bool repeat = false)
         {
             return CalculateToTarget(value, target, increase, repeat) < target;
         }

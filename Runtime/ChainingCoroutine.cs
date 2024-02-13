@@ -25,7 +25,7 @@ namespace StellaFox
         //1     : 싱글 반복문 등록할때
         //2     : 이중 반복문 등록할때
         //3 ~   : 그 이상
-        private int _repeatLevel = 0;
+        private int _bindingLayer = 0;
 
         private ReferenceAction _onNextRoutine;
         private RoutineExecutor _processor;
@@ -61,7 +61,7 @@ namespace StellaFox
 
         public IChainingCoroutine Bind(Action<RoutineInfo> action)
         {
-            _processor.Bind(new Routine(action, routineInfo, _onNextRoutine), _repeatLevel);
+            _processor.Bind(new Routine(action, routineInfo, _onNextRoutine), _bindingLayer);
             return this;
         }
 
@@ -69,7 +69,7 @@ namespace StellaFox
 
         public IChainingCoroutine Wait(YieldInstruction wait)
         {
-            _processor.Bind(new DelayRoutine<YieldInstruction>(() => wait, _onNextRoutine), _repeatLevel);
+            _processor.Bind(new DelayRoutine<YieldInstruction>(() => wait, _onNextRoutine), _bindingLayer);
             return this;
         }
 
@@ -82,7 +82,7 @@ namespace StellaFox
             {
                 Func<WaitForCompletion> cd = () => new WaitForCompletion(triggerCondition, routineInfo); //condition
 
-                _processor.Bind(new DelayRoutine<WaitForCompletion>(cd, _onNextRoutine, true), _repeatLevel);
+                _processor.Bind(new DelayRoutine<WaitForCompletion>(cd, _onNextRoutine, true), _bindingLayer);
             }
             return this;
         }
@@ -93,7 +93,7 @@ namespace StellaFox
         {
             if (coroutines != null && coroutines.Length > 0)
             {
-                _processor.Bind(new WaitRoutine(coroutines, _onNextRoutine), _repeatLevel);
+                _processor.Bind(new WaitRoutine(coroutines, _onNextRoutine), _bindingLayer);
             }
             return this;
         }
@@ -105,7 +105,7 @@ namespace StellaFox
         {
             if (condition != null)
             {
-                _processor.Bind(new IfRoutine(yield, condition, routineInfo, _onNextRoutine), _repeatLevel);
+                _processor.Bind(new IfRoutine(yield, condition, routineInfo, _onNextRoutine), _bindingLayer);
             }
 
             return this;
@@ -117,9 +117,9 @@ namespace StellaFox
         {
             if (loopCondition != null)
             {
-                _processor.Bind(new RoutineProcessor(loopCondition, routineInfo), _repeatLevel);
+                _processor.Bind(new RoutineIterator(loopCondition), _bindingLayer);
                 //넣고 루프를 하나 증가. _repeatLevel부터 올리면 index를 증가하고 list에 넣는것과 같음.
-                _repeatLevel++;
+                _bindingLayer++;
             }
             else
             {
@@ -135,10 +135,10 @@ namespace StellaFox
         {
             if (endAction != null)
             {
-                _processor.Bind(new Routine(endAction, routineInfo, _onNextRoutine), _repeatLevel);
+                _processor.Bind(new Routine(endAction, routineInfo, _onNextRoutine), _bindingLayer);
             }
 
-            _repeatLevel = Mathf.Max(0, _repeatLevel - 1);
+            _bindingLayer = Mathf.Max(0, _bindingLayer - 1);
             return this;
         }
 
@@ -146,7 +146,7 @@ namespace StellaFox
 
         public Coroutine Play()
         {
-            if (_repeatLevel != 0)
+            if (_bindingLayer != 0)
             {
                 throw new UnityException("Repeat level isn't zero");
             }
