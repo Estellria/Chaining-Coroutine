@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.Runtime.CompilerServices;
 
-namespace StellaFox
+namespace CCoroutine
 {
     public class CoroutineManager : MonoBehaviour
     {

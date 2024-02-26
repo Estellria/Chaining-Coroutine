@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
-namespace StellaFox
+namespace CCoroutine
 {
     public class Condition //풀링할 수 있게 만들기
     {

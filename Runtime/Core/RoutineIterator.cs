@@ -2,10 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
 using UnityEngine;
 
-namespace StellaFox
+namespace CCoroutine
 {
     public class RoutineIterator : IRoutine
     {
@@ -44,7 +43,7 @@ namespace StellaFox
                             yield return GetRoutineList[i].Execute();
                             break;
 
-                        case eRoutineType.NonDelay:
+                        case eRoutineType.Immediately:
                             GetRoutineList[i].Execute();
                             break;
                     }

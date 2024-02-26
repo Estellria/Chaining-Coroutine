@@ -1,7 +1,7 @@
 using UnityEngine;
 using System;
 
-namespace StellaFox
+namespace CCoroutine
 {
     public class ChainingCoroutine : IChainingCoroutine
     {
@@ -20,11 +20,6 @@ namespace StellaFox
 
         #region Field
 
-        //바인드할때의 실행 레벨. (바인딩할때만 사용됨)
-        //0     : 한번 실행으로 등록
-        //1     : 싱글 반복문 등록할때
-        //2     : 이중 반복문 등록할때
-        //3 ~   : 그 이상
         private int _bindingLayer = 0;
 
         private ReferenceAction _onNextRoutine;
@@ -75,7 +70,6 @@ namespace StellaFox
 
 
 
-        //조건이 달성될때까지 대기
         public IChainingCoroutine WaitFor(Func<RoutineInfo, bool> triggerCondition)
         {
             if (triggerCondition != null)
@@ -100,7 +94,6 @@ namespace StellaFox
 
 
 
-        //조건이 참일 경우에만 대기
         public IChainingCoroutine WaitIf(YieldInstruction yield, Func<RoutineInfo, bool> condition)
         {
             if (condition != null)
@@ -118,7 +111,6 @@ namespace StellaFox
             if (loopCondition != null)
             {
                 _processor.Bind(new RoutineIterator(loopCondition), _bindingLayer);
-                //넣고 루프를 하나 증가. _repeatLevel부터 올리면 index를 증가하고 list에 넣는것과 같음.
                 _bindingLayer++;
             }
             else
@@ -130,7 +122,6 @@ namespace StellaFox
 
 
 
-        //Action<RoutineInfo> exitAction = null
         public IChainingCoroutine EndLoop(Action<RoutineInfo> endAction = null)
         {
             if (endAction != null)
@@ -146,6 +137,12 @@ namespace StellaFox
 
         public Coroutine Play()
         {
+            if (!_processor.HaveRoutine)
+            {
+                return null;
+            }
+
+
             if (_bindingLayer != 0)
             {
                 throw new UnityException("Repeat level isn't zero");
@@ -157,7 +154,7 @@ namespace StellaFox
             }
             else
             {
-                Debug.LogError("이미 실행 중");
+                Debug.LogError("already playing");
             }
 
             return WaitCoroutine;

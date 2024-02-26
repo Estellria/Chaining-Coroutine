@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEngine;
 
 
-namespace StellaFox
+namespace CCoroutine
 {
     public class RoutineExecutor
     {
@@ -21,6 +21,11 @@ namespace StellaFox
         private Action _startAction;
         private Action _endAction;
 
+        private bool HaveRoutine
+        {
+            get { return _routineList.Count > 0; }
+        }
+
 
         //런타임 실행
         public IEnumerator Execute()
@@ -35,7 +40,7 @@ namespace StellaFox
                         yield return _routineList[i].Execute();
                         break;
 
-                    case eRoutineType.NonDelay:
+                    case eRoutineType.Immediately:
                         _routineList[i].Execute();
                         break;
                 }
@@ -48,7 +53,6 @@ namespace StellaFox
         {
             var accessList = _routineList;
 
-            //repeatLevel의 수는 반복문 계층을 의미하고 한 계층당 하나의 반복문이 존재하기에 반복문에서 tempList가 null이 될 수 없다.
             for (int i = 0; i < repeatLevel; ++i)
             {
                 var rp = accessList?.LastOrDefault(e => e is RoutineIterator);

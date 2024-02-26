@@ -1,12 +1,10 @@
-﻿using StellaFox;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Unity.VisualScripting;
 using UnityEngine;
 
-namespace StellaFox
+namespace CCoroutine
 {
     public class RoutineInfo
     {
@@ -53,7 +51,7 @@ namespace StellaFox
 
         public eRoutineType GetRoutineType 
         {
-            get { return eRoutineType.NonDelay; }
+            get { return eRoutineType.Immediately; }
         }
 
         private RoutineInfo _routineInfo;
@@ -146,7 +144,7 @@ namespace StellaFox
             get
             {
                 bool canWait = _yieldConidtion.Invoke(_routineInfo);
-                return canWait ? eRoutineType.Delay : eRoutineType.NonDelay;
+                return canWait ? eRoutineType.Delay : eRoutineType.Immediately;
             }
         }
 

@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
+using System;
 
-namespace StellaFox
+namespace CCoroutine
 {
     public class WaitForCompletion : CustomYieldInstruction
     {
