@@ -121,7 +121,7 @@ new ChainingCoroutine()
 
 BeginLoop 함수와 EndLoop 함수 사이의 루틴들을 BeginLoop 함수의 조건이 참일때 반복 수행됩니다.  
 
-이때 각 루프들은 자동으로 yield return null을 수행하기 때문에 한 프레임을 쉬며 제어권을 반환합니다.
+이때 각 루프들은 내부적으로 yield return null을 수행하기 때문에 한 프레임을 쉬며 제어권을 반환합니다.
 
 ```C#
 int index = 0;
